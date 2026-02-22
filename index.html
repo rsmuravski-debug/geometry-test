@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -12,7 +11,7 @@ HTML
         .question { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #0088cc; }
         input[type="number"] { width: 100%; padding: 12px; margin-top: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         
-        /* Кнопка здачі (з твого коміту) */
+        /* Кнопка здачі (дизайн з твого коміту) */
         .submit-btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; transition: 0.3s; margin-top: 10px; font-weight: bold; }
         .submit-btn:hover { background: #006699; }
         
@@ -25,19 +24,20 @@ HTML
         .calc-btn.spec { background: #2980b9; }
         .calc-btn.clear { background: #c0392b; }
 
+        /* Екран провалу */
         #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff4444; color: white; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
 
 <div id="fail-screen">
-    <h1 style="font-size: 2.5rem;">ТЕСТ ПРОВАЛЕНО</h1>
-    <p id="fail-reason" style="font-size: 1.3rem;"></p>
-    <p>Спроба списати зафіксована. Вчитель (ID: 5250364592) отримав звіт.</p>
+    <h1 style="font-size: 3rem;">Test failed.</h1>
+    <p id="fail-reason" style="font-size: 1.5rem;"></p>
+    <p>Спроба зафіксована. Вчитель отримав сповіщення.</p>
 </div>
 
 <div class="quiz-container" id="quiz-ui">
-    <h2 style="text-align: center;">📐 Контрольна робота</h2>
+    <h2 style="text-align: center;">📐 Тест: 6 завдань</h2>
 
     <div class="calc-wrapper">
         <input type="text" id="calc-display" class="calc-display" placeholder="0" readonly>
@@ -83,58 +83,40 @@ HTML
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // ЗАХИСТ ВІД СПИСУВАННЯ
+    // ЗАХИСТ
     function blockTest(reason) {
         document.getElementById('quiz-ui').style.display = 'none';
         document.getElementById('fail-screen').style.display = 'flex';
         document.getElementById('fail-reason').innerText = reason;
-        tg.sendData(JSON.stringify({"status": "failed", "reason": reason}));
-        // Видалення даних для запобігання повторному входу (опціонально)
+        tg.sendData(JSON.stringify({"status": "blocked", "reason": reason}));
         setTimeout(() => { tg.close(); }, 3000);
     }
 
-    // Відстеження виходу з вікна (Alt+Tab, інша вкладка, скриншот на мобільному)
-    window.addEventListener('blur', () => {
-        blockTest("Test failed. Вихід з вікна або згортання.");
+    // Твої інструкції: при переході на іншу вкладку або згортанні
+    window.onblur = () => blockTest("Вихід з вікна");
+    document.addEventListener("visibilitychange", () => { 
+        if (document.hidden) blockTest("Згортання вікна"); 
     });
 
-    // Відстеження приховування сторінки
-    document.addEventListener("visibilitychange", () => {
-        if (document.hidden) {
-            blockTest("Test failed. Додаток згорнуто.");
-        }
-    });
-
-    // КАЛЬКУЛЯТОР
+    // КАЛЬКУЛЯТОР (без виправлень логіки)
     const d = document.getElementById('calc-display');
     function cAdd(v) { d.value += v; }
     function cClear() { d.value = ''; }
-    
-    function getCurrentNum() {
-        try { return eval(d.value) || 0; } catch { return 0; }
-    }
+    function cSolve() { try { d.value = eval(d.value); } catch { d.value = 'Error'; } }
+    function cSqrt() { if(d.value) d.value = Math.sqrt(eval(d.value)).toFixed(2); }
+    function cSquare() { if(d.value) d.value = Math.pow(eval(d.value), 2); }
+    function cSin() { if(d.value) d.value = Math.sin(eval(d.value) * Math.PI / 180).toFixed(4); }
 
-    function cSolve() { 
-        let res = getCurrentNum();
-        d.value = Number.isInteger(res) ? res : res.toFixed(2);
-    }
-
-    function cSqrt() { d.value = Math.sqrt(getCurrentNum()).toFixed(2).replace(/\.00$/, ''); }
-    function cSquare() { d.value = Math.pow(getCurrentNum(), 2); }
-    function cSin() { d.value = Math.sin(getCurrentNum() * Math.PI / 180).toFixed(4); }
-
-    // ЗДАЧА ТЕСТУ
     function finishTest() {
-        let s = 0;
-        if(document.getElementById('q1').value == "5") s += 2;
-        if(document.getElementById('q2').value == "10") s += 2;
-        if(document.getElementById('q3').value == "17") s += 2;
-        if(document.getElementById('q4').value == "8") s += 2;
-        if(document.getElementById('q5').value == "6") s += 2;
-        if(document.getElementById('q6').value == "8") s += 2;
-        
-        tg.sendData(JSON.stringify({"status": "completed", "score": s}));
-        alert("Результат: " + s + " балів. Дякуємо!");
+        let score = 0;
+        if (document.getElementById('q1').value == "5") score += 2;
+        if (document.getElementById('q2').value == "10") score += 2;
+        if (document.getElementById('q3').value == "17") score += 2;
+        if (document.getElementById('q4').value == "8") score += 2;
+        if (document.getElementById('q5').value == "6") score += 2;
+        if (document.getElementById('q6').value == "8") score += 2;
+
+        tg.sendData(JSON.stringify({"status": "completed", "score": score}));
         tg.close();
     }
 </script>
