@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -10,19 +9,19 @@ HTML
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .quiz-container { max-width: 600px; width: 100%; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .question { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #0088cc; }
-        input[type="number"] { width: 100%; padding: 10px; margin-top: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .submit-btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        input[type="number"] { width: 100%; padding: 12px; margin-top: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .submit-btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; transition: 0.3s; margin-top: 10px; font-weight: bold; }
         .submit-btn:hover { background: #006699; }
         
         /* Калькулятор */
         .calc-wrapper { background: #1a1a1a; padding: 15px; border-radius: 15px; margin-bottom: 25px; color: white; width: 100%; box-sizing: border-box; }
-        .calc-display { width: 100%; height: 45px; background: #333; border-radius: 5px; border: 1px solid #444; margin-bottom: 10px; text-align: right; padding: 5px 15px; font-size: 1.4rem; color: #00ff00; box-sizing: border-box; font-family: monospace; }
+        .calc-display { width: 100%; height: 50px; background: #333; border-radius: 5px; border: 1px solid #444; margin-bottom: 10px; text-align: right; padding: 5px 15px; font-size: 1.5rem; color: #00ff00; box-sizing: border-box; font-family: monospace; }
         .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .calc-btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; background: #4a4a4a; color: white; }
+        .calc-btn { padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; background: #4a4a4a; color: white; }
         .calc-btn.op { background: #f39c12; }
         .calc-btn.spec { background: #2980b9; }
         .calc-btn.clear { background: #c0392b; }
-        .calc-btn:active { transform: scale(0.95); }
+        .calc-btn:active { transform: scale(0.95); background: #666; }
 
         #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff4444; color: white; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; text-align: center; padding: 20px; }
     </style>
@@ -36,8 +35,8 @@ HTML
 </div>
 
 <div class="quiz-container" id="quiz-ui">
-    <h2 style="text-align: center;">📐 Контрольна робота</h2>
-    <p style="text-align: center; color: #666; margin-bottom: 20px;">Тема: Перпендикуляр, похила та проєкція</p>
+    <h2 style="text-align: center; margin-bottom: 5px;">📐 Контрольна робота</h2>
+    <p style="text-align: center; color: #666; margin-bottom: 20px;">Перпендикуляр, похила та проєкція</p>
 
     <div class="calc-wrapper">
         <input type="text" id="calc-display" class="calc-display" placeholder="0" readonly>
@@ -71,32 +70,32 @@ HTML
 
     <div class="question">
         <p><strong>1.</strong> Перпендикуляр 12 см, похила 13 см. Знайдіть проєкцію (см).</p>
-        <input type="number" id="q1" placeholder="Введіть відповідь">
+        <input type="number" id="q1" placeholder="Відповідь">
     </div>
 
     <div class="question">
         <p><strong>2.</strong> Похила 20 см утворює з площиною кут 30°. Знайдіть довжину перпендикуляра (см).</p>
-        <input type="number" id="q2" placeholder="Введіть відповідь">
+        <input type="number" id="q2" placeholder="Відповідь">
     </div>
 
     <div class="question">
         <p><strong>3.</strong> Проєкція похилої 8 см, перпендикуляр 15 см. Знайдіть довжину похилої (см).</p>
-        <input type="number" id="q3" placeholder="Введіть відповідь">
+        <input type="number" id="q3" placeholder="Відповідь">
     </div>
 
     <div class="question">
         <p><strong>4.</strong> Дві похилі 10 см і 17 см виходять з однієї точки. Одна з їх проєкцій на 9 см більша за іншу. Знайдіть довжину перпендикуляра (см).</p>
-        <input type="number" id="q4" placeholder="Введіть відповідь">
+        <input type="number" id="q4" placeholder="Відповідь">
     </div>
 
     <div class="question">
         <p><strong>5.</strong> Перпендикуляр дорівнює 4 см. Знайдіть довжину похилої, яка нахилена до площини під кутом 45° (окруліть до цілого: $\sqrt{32} \approx 6$).</p>
-        <input type="number" id="q5" placeholder="Введіть відповідь">
+        <input type="number" id="q5" placeholder="Відповідь">
     </div>
 
     <div class="question">
         <p><strong>6.</strong> Відстань від точки до площини 6 см. Знайдіть довжину проєкції, якщо сама похила дорівнює 10 см.</p>
-        <input type="number" id="q6" placeholder="Введіть відповідь">
+        <input type="number" id="q6" placeholder="Відповідь">
     </div>
 
     <button class="submit-btn" onclick="finishTest()">Здати роботу</button>
@@ -106,7 +105,7 @@ HTML
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Захист: вихід із вікна
+    // Захист (Ваше правило)
     function blockTest(reason) {
         document.getElementById('quiz-ui').style.display = 'none';
         document.getElementById('fail-screen').style.display = 'flex';
@@ -115,23 +114,49 @@ HTML
         setTimeout(() => { tg.close(); }, 3000);
     }
 
-    window.onblur = () => blockTest("Спроба виходу з тесту");
+    window.onblur = () => blockTest("Вихід з вікна");
 
-    // Функції калькулятора
+    // ЛОГІКА КАЛЬКУЛЯТОРА
     const cDisp = document.getElementById('calc-display');
+
     function cAdd(v) { cDisp.value += v; }
     function cClear() { cDisp.value = ''; }
-    function cSolve() { try { cDisp.value = eval(cDisp.value); } catch { cDisp.value = 'Error'; } }
-    function cSqrt() { if(cDisp.value) cDisp.value = Math.sqrt(eval(cDisp.value)).toFixed(2); }
-    function cSquare() { if(cDisp.value) cDisp.value = Math.pow(eval(cDisp.value), 2); }
-    function cSin() { 
+    
+    function cSolve() { 
+        try { 
+            let result = eval(cDisp.value);
+            cDisp.value = Number.isInteger(result) ? result : result.toFixed(2);
+        } catch { cDisp.value = 'Error'; } 
+    }
+
+    function cSqrt() { 
         if(cDisp.value) {
-            let deg = eval(cDisp.value);
-            cDisp.value = Math.sin(deg * Math.PI / 180).toFixed(4);
+            try {
+                let val = eval(cDisp.value);
+                cDisp.value = Math.sqrt(val).toFixed(2).replace(/\.00$/, '');
+            } catch { cDisp.value = 'Error'; }
         }
     }
 
-    // Завершення тесту
+    function cSquare() { 
+        if(cDisp.value) {
+            try {
+                let val = eval(cDisp.value);
+                cDisp.value = Math.pow(val, 2).toFixed(2).replace(/\.00$/, '');
+            } catch { cDisp.value = 'Error'; }
+        }
+    }
+
+    function cSin() { 
+        if(cDisp.value) {
+            try {
+                let deg = eval(cDisp.value);
+                cDisp.value = Math.sin(deg * Math.PI / 180).toFixed(4).replace(/\.0000$/, '');
+            } catch { cDisp.value = 'Error'; }
+        }
+    }
+
+    // ЗАВЕРШЕННЯ
     function finishTest() {
         let score = 0;
         if (document.getElementById('q1').value == "5") score += 2;
@@ -141,17 +166,10 @@ HTML
         if (document.getElementById('q5').value == "6") score += 2;
         if (document.getElementById('q6').value == "8") score += 2;
 
-        tg.sendData(JSON.stringify({
-            "status": "completed", 
-            "score": score, 
-            "teacher_id": "5250364592"
-        }));
-        
-        alert("Дякую! Вашу роботу надіслано вчителю.");
+        tg.sendData(JSON.stringify({"status": "completed", "score": score, "id": "5250364592"}));
+        alert("Роботу здано! Результат: " + score + " балів.");
         tg.close();
     }
 </script>
 </body>
 </html>
-
-
