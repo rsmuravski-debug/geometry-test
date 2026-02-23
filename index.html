@@ -1,64 +1,64 @@
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Контрольна робота: Перпендикуляр і похила</title>
+    <title>Контрольна робота</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; user-select: none; }
-        .quiz-container { max-width: 600px; width: 100%; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { color: #1c1e21; text-align: center; font-size: 24px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; user-select: none; }
+        .quiz-container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        #start-screen { text-align: center; }
+        #quiz-content { display: none; }
         .question { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #0088cc; }
-        p { margin: 0 0 10px 0; font-weight: 500; }
-        input[type="number"] { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; transition: border-color 0.3s; }
-        input[type="number"]:focus { border-color: #0088cc; outline: none; }
-        .submit-btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.3s; }
-        .submit-btn:hover { background: #006699; }
-        #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff4444; color: white; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 1000; padding: 20px; }
+        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; }
+        #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff4444; color: white; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
     </style>
 </head>
 <body>
 
     <div id="fail-screen">
-        <h1 style="font-size: 3.5rem; color: white; margin: 0;">ТЕСТ ПРОВАЛЕНО</h1>
-        <p style="font-size: 1.5rem;" id="fail-reason"></p>
-        <p>Спроба обходу зафіксована та надіслана вчителю. Оцінка: 0/12.</p>
+        <h1>ТЕСТ АНУЛЬОВАНО</h1>
+        <p id="fail-reason" style="font-size: 1.2rem;"></p>
     </div>
 
-    <div class="quiz-container" id="main-quiz">
-        <h1>📐 Геометрія: 10 клас</h1>
-        <p style="text-align: center; color: #666;">Тема: Перпендикуляр та похила</p>
-        
-        <div class="question">
-            <p>1. До площини проведено перпендикуляр довжиною 12 см і похилу довжиною 13 см. Знайдіть довжину проєкції.</p>
-            <input type="number" id="q1" placeholder="см">
+    <div class="quiz-container" id="main-app">
+        <div id="start-screen">
+            <h2>📐 Геометрія: 10 клас</h2>
+            <p>Натисніть кнопку, щоб зафіксувати параметри вашого пристрою та почати тест.</p>
+            <p style="color: red; font-size: 0.8rem;">⚠️ Після натискання зміна розміру вікна або вихід заборонені!</p>
+            <button class="btn" onclick="initTest()">Почати роботу</button>
         </div>
 
-        <div class="question">
-            <p>2. Проєкція похилої дорівнює 5 см, а кут між похилою і проєкцією — 45°. Знайдіть довжину перпендикуляра.</p>
-            <input type="number" id="q2" placeholder="см">
+        <div id="quiz-content">
+            <div class="question">
+                <p>1. Перпендикуляр 12 см, похила 13 см. Проєкція?</p>
+                <input type="number" id="q1">
+            </div>
+            <div class="question">
+                <p>2. Проєкція 5 см, кут 45°. Перпендикуляр?</p>
+                <input type="number" id="q2">
+            </div>
+            <div class="question">
+                <p>3. Похилі по 10 см, кут між проєкціями 60°, відстань 6 см. Перпендикуляр?</p>
+                <input type="number" id="q3">
+            </div>
+            <button class="btn" onclick="finishTest()">Здати роботу</button>
         </div>
-
-        <div class="question">
-            <p>3. З точки до площини проведено дві похилі по 10 см. Їх проєкції утворюють кут 60°, а відстань між основами похилих — 6 см. Знайдіть довжину перпендикуляра.</p>
-            <input type="number" id="q3" placeholder="см">
-        </div>
-
-        <button class="submit-btn" onclick="finishTest()">Здати роботу</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand();
+        tg.expand(); [cite: 23]
+        tg.enableClosingConfirmation();
 
-        // Початкові розміри вікна для порівняння
-        let initialHeight = window.innerHeight;
-        let initialWidth = window.innerWidth;
+        let baseHeight = 0;
+        let baseWidth = 0;
+        let isStarted = false;
 
         function blockTest(reason) {
-            document.getElementById('main-quiz').style.display = 'none';
+            document.getElementById('main-app').style.display = 'none';
             document.getElementById('fail-screen').style.display = 'flex';
             document.getElementById('fail-reason').innerText = reason;
 
@@ -66,86 +66,53 @@
                 "status": "blocked",
                 "reason": reason,
                 "score": 0
-            }));
+            })); [cite: 24, 29]
 
-            setTimeout(() => { tg.close(); }, 3000);
+            setTimeout(() => { tg.close(); }, 3000); [cite: 25]
         }
 
-        // 1. Захист від розподілу екрана та зміни розміру вікна
-        window.addEventListener('resize', () => {
-            // Якщо висота вікна зменшилася більш ніж на 25% (ознака split-screen або відкриття клавіатури, 
-            // але в Mini App зміна розміру при split-screen дуже суттєва)
-            if (window.innerHeight < initialHeight * 0.75 || window.innerWidth < initialWidth * 0.9) {
-                blockTest("Розподілений екран або зміна розміру вікна");
+        // Функція фіксації розміру при запуску
+        function initTest() {
+            baseHeight = window.innerHeight;
+            baseWidth = window.innerWidth;
+            isStarted = true;
+
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('quiz-content').style.display = 'block';
+        }
+
+        // Постійна перевірка на відповідність початковим розмірам
+        setInterval(() => {
+            if (!isStarted) return;
+
+            // Дозволяємо похибку 5% на випадок появи системних кнопок навігації
+            const hDiff = Math.abs(window.innerHeight - baseHeight);
+            const wDiff = Math.abs(window.innerWidth - baseWidth);
+
+            if (hDiff > (baseHeight * 0.1) || wDiff > (baseWidth * 0.1)) {
+                blockTest("Зміна розміру екрана (можливий split-screen)");
             }
-        });
+        }, 600);
 
-        // 2. Захист від перемикання вкладок або виходу з додатка [cite: 25, 26]
-        window.onblur = () => blockTest("Перехід на іншу вкладку або вікно");
+        // Стандартні пастки
+        window.onblur = () => { if(isStarted) blockTest("Втрата фокусу вікна"); }; [cite: 25]
         document.addEventListener("visibilitychange", () => {
-            if (document.hidden) blockTest("Додаток згорнуто");
+            if (document.hidden && isStarted) blockTest("Додаток згорнуто"); [cite: 26]
         });
-
-        // 3. Захист від скріншотів (тільки для Telegram на Android/iOS)
-        tg.onEvent('screenshotReady', () => {
-            blockTest("Зроблено скріншот");
-        });
-
-        // 4. Заборона контекстного меню (правої кнопки миші)
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    // Забороняє закрити тест випадковим рухом вниз
-    tg.enableClosingConfirmation(); 
-
-    const startHeight = window.innerHeight;
-
-    function blockTest(reason) {
-        document.getElementById('main-quiz').style.display = 'none';
-        document.getElementById('fail-screen').style.display = 'flex';
-        document.getElementById('fail-reason').innerText = reason;
-
-        tg.sendData(JSON.stringify({
-            "status": "blocked",
-            "reason": reason
-        }));
-
-        setTimeout(() => { tg.close(); }, 3000);
-    }
-
-    // Перевірка розміру вікна
-    setInterval(() => {
-        // Якщо учень активує split-screen, висота вікна різко впаде
-        if (window.innerHeight < startHeight * 0.8) {
-            blockTest("Розподілений екран або зміна вікна");
-        }
-    }, 500);
-
-    // Система виявлення виходу та згортання [cite: 1, 25, 26]
-    window.onblur = () => blockTest("Перехід на іншу вкладку або вікно");
-    document.addEventListener("visibilitychange", () => {
-        if (document.hidden) blockTest("Додаток згорнуто");
-    });
-    
-    // Детектор скріншотів
-    tg.onEvent('screenshotReady', () => blockTest("Зроблено скріншот"));
-</script>
+        tg.onEvent('screenshotReady', () => { if(isStarted) blockTest("Зроблено скріншот"); });
 
         function finishTest() {
             let score = 0;
-            // Перевірка відповідей 
-            if (document.getElementById('q1').value == "5") score += 4;
-            if (document.getElementById('q2').value == "5") score += 4;
-            if (document.getElementById('q3').value == "8") score += 4;
+            if (document.getElementById('q1').value == "5") score += 4; [cite: 28]
+            if (document.getElementById('q2').value == "5") score += 4; [cite: 28]
+            if (document.getElementById('q3').value == "8") score += 4; [cite: 29]
 
             tg.sendData(JSON.stringify({
                 "status": "completed",
                 "score": score
-            }));
-            tg.close();
+            })); [cite: 29]
+            tg.close(); [cite: 30]
         }
     </script>
 </body>
 </html>
-
