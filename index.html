@@ -1,3 +1,9 @@
+Проблема полягала в тому, що перевірка фокусу (document.hasFocus()) сприймала відкриття клавіатури як вихід із програми. Щоб це виправити, ми додамо логіку "амністії": коли учень натискає на поле введення, система тимчасово дозволяє зміну фокусу та висоти екрана.
+
+Ось фінальний, повністю відкоригований код index.html.
+
+Повний код index.html (Клавіатура дозволена)
+HTML
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -7,14 +13,14 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { user-select: none !important; -webkit-touch-callout: none !important; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; touch-action: manipulation; }
         .quiz-container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         #quiz-content { display: none; }
         .question { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #0088cc; }
-        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
-        input:focus { border-color: #0088cc; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; outline: none; box-sizing: border-box; appearance: none; }
+        input:focus { border-color: #0088cc; background: #fff; }
         .btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; }
-        .btn:disabled { background: #ccc !important; cursor: not-allowed; opacity: 0.6; }
+        .btn:disabled { background: #ccc !important; opacity: 0.6; }
         #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #ff4444; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; padding: 20px; text-align: center; }
     </style>
 </head>
@@ -29,18 +35,18 @@
     <div class="quiz-container" id="main-app">
         <div id="start-screen">
             <h2>📐 Геометрія: 10 клас</h2>
-            <p id="status-msg">Перевірка середовища...</p>
-            <button class="btn" id="start-btn">ПОЧАТИ ТЕСТ</button>
+            <p id="status-msg">Перевірка системи захисту...</p>
+            <button class="btn" id="start-btn" disabled>ПОЧАТИ ТЕСТ</button>
         </div>
 
         <div id="quiz-content">
             <div class="question">
                 <p>1. Перпендикуляр 12 см, похила 13 см. Проєкція?</p>
-                <input type="number" id="q1" placeholder="Введіть число">
+                <input type="number" id="q1" pattern="[0-9]*" inputmode="numeric">
             </div>
             <div class="question">
                 <p>2. Проєкція 5 см, кут 45°. Перпендикуляр?</p>
-                <input type="number" id="q2" placeholder="Введіть число">
+                <input type="number" id="q2" pattern="[0-9]*" inputmode="numeric">
             </div>
             <button class="btn" id="finish-btn" style="background: #28a745;">ЗДАТИ РОБОТУ</button>
         </div>
@@ -54,88 +60,93 @@
         let isStarted = false;
         let baseH = 0;
         let baseW = 0;
-        let isKeyboardOpen = false;
+        let ignoreFocusLoss = false; // Ключовий прапорець для клавіатури
 
-        // Постійна перевірка стану екрана до старту
-        const checkInitialState = setInterval(() => {
-            if (isStarted) {
-                clearInterval(checkInitialState);
-                return;
-            }
+        function blockTest(reason) {
+            if (!isStarted || ignoreFocusLoss) return;
+            isStarted = false;
+
+            const finalReason = reason === "focus_loss" ? "Test failed." : reason;
+
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('fail-screen').style.display = 'flex';
+            document.getElementById('fail-reason').innerText = finalReason;
+
+            tg.sendData(JSON.stringify({"status": "blocked", "reason": finalReason}));
+            setTimeout(() => { tg.close(); }, 2500);
+        }
+
+        // ПЕРЕВІРКА ПЕРЕД ЗАПУСКОМ (Split-screen detector)
+        const checkEntry = setInterval(() => {
+            if (isStarted) return;
+            const ratio = window.innerHeight / window.innerWidth;
             const btn = document.getElementById('start-btn');
             const msg = document.getElementById('status-msg');
-            const ratio = window.innerHeight / window.innerWidth;
 
-            // Більш лояльний поріг для запуску (ratio > 1.0 — вертикальний режим)
-            if (ratio < 1.05) {
+            if (ratio < 1.1) {
                 btn.disabled = true;
-                msg.innerText = "❌ Вимкніть розділений екран або поверніть телефон вертикально!";
-                msg.style.color = "red";
+                msg.innerHTML = "<span style='color:red'>❌ Вимкніть розділений екран!</span>";
             } else {
                 btn.disabled = false;
-                msg.innerText = "✅ Система готова до запуску.";
-                msg.style.color = "green";
+                msg.innerHTML = "<span style='color:green'>✅ Система готова.</span>";
             }
         }, 500);
 
-        function blockTest(reason) {
-            if (!isStarted) return;
-            isStarted = false;
-            document.getElementById('main-app').style.display = 'none';
-            document.getElementById('fail-screen').style.display = 'flex';
-            document.getElementById('fail-reason').innerText = reason;
-            tg.sendData(JSON.stringify({"status": "blocked", "reason": reason}));
-            setTimeout(() => tg.close(), 3000);
-        }
-
-        // Відстеження клавіатури для внесення даних
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('focus', () => { isKeyboardOpen = true; });
-            input.addEventListener('blur', () => { setTimeout(() => { isKeyboardOpen = false; }, 500); });
+        // ЛОГІКА КЛАВІАТУРИ: Дозволяємо фокус на інпутах
+        document.querySelectorAll('input').forEach(inp => {
+            inp.addEventListener('focus', () => { 
+                ignoreFocusLoss = true; 
+            });
+            inp.addEventListener('blur', () => { 
+                // Повертаємо захист через 500мс після закриття клавіатури
+                setTimeout(() => { ignoreFocusLoss = false; }, 500); 
+            });
         });
 
-        function startQuiz() {
-            // Заміряємо еталонні розміри
+        document.getElementById('start-btn').onclick = () => {
             baseH = window.innerHeight;
             baseW = window.innerWidth;
             isStarted = true;
-
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('quiz-content').style.display = 'block';
-            
-            // Жорсткий моніторинг після старту
+
+            // Моніторинг розміру вікна (Split-screen під час тесту)
             setInterval(() => {
                 if (!isStarted) return;
-                let currentH = window.innerHeight;
-                let currentW = window.innerWidth;
-                let hDiff = Math.abs(currentH - baseH);
-                let wDiff = Math.abs(currentW - baseW);
+                const hDiff = Math.abs(window.innerHeight - baseH);
+                const wDiff = Math.abs(window.innerWidth - baseW);
 
-                // Якщо клавіатура закрита — будь-яка зміна висоти заборонена
-                if (!isKeyboardOpen && hDiff > 40) {
-                    blockTest("Зміна розміру вікна (Split-screen)");
+                // Якщо клавіатура закрита і висота змінилася - блок
+                if (!ignoreFocusLoss && hDiff > 60) blockTest("Розподілений екран (Висота)");
+                // Ширина не має мінятися ніколи
+                if (wDiff > 30) blockTest("Розподілений екран (Ширина)");
+            }, 500);
+
+            // Ультра-захист від виходу (Test failed.)
+            function monitorFocus() {
+                if (isStarted && !document.hasFocus() && !ignoreFocusLoss) {
+                    blockTest("focus_loss");
                 }
-                // Ширина не повинна мінятися навіть з клавіатурою
-                if (wDiff > 25) {
-                    blockTest("Зміна ширини вікна (Split-screen)");
-                }
-            }, 400);
-        }
+                if (isStarted) requestAnimationFrame(monitorFocus);
+            }
+            requestAnimationFrame(monitorFocus);
+        };
 
-        document.getElementById('start-btn').addEventListener('click', startQuiz);
+        // Миттєве блокування при згортанні
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && isStarted) blockTest("Додаток згорнуто");
+        });
 
-        // Спеціальне правило: перемикання вкладки
-        window.onblur = () => { if(isStarted) blockTest("Test failed."); };
-        
-        tg.onEvent('screenshotReady', () => { if(isStarted) blockTest("Скріншот заблоковано"); });
+        // Скріншоти
+        tg.onEvent('screenshotReady', () => { blockTest("Скріншот"); });
 
-        document.getElementById('finish-btn').addEventListener('click', () => {
+        document.getElementById('finish-btn').onclick = () => {
             let score = 0;
             if (document.getElementById('q1').value == "5") score += 6;
             if (document.getElementById('q2').value == "5") score += 6;
             tg.sendData(JSON.stringify({"status": "completed", "score": score}));
             tg.close();
-        });
+        };
     </script>
 </body>
 </html>
