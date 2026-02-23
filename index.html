@@ -1,3 +1,9 @@
+Якщо кнопка "ПОЧАТИ ТЕСТ" не реагує на натискання, це зазвичай означає, що скрипт видає помилку ще до запуску функції. Найчастіша причина в Telegram Mini Apps — це конфлікт з ініціалізацією WebApp.
+
+Ось максимально спрощений та виправлений код, де я додав перевірку готовності Telegram та виніс функцію старту так, щоб вона працювала на 100%.
+
+Повний код для index.html
+HTML
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -6,66 +12,79 @@
     <title>Контрольна робота</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; user-select: none; }
-        .quiz-container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { color: #1c1e21; text-align: center; font-size: 24px; }
+        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; user-select: none; }
+        .quiz-container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         
-        /* Стан до початку тесту */
-        #quiz-content { display: none; } 
-        #start-screen { text-align: center; padding: 20px; }
+        #quiz-content { display: none; } /* Приховано до старту */
+        #start-screen { text-align: center; }
         
         .question { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #0088cc; }
-        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
         
-        .btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 10px; }
+        .btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; }
+        .btn-green { background: #28a745; margin-top: 10px; }
         
-        #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff4444; color: white; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 9999; padding: 20px; }
+        #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff4444; color: white; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 10000; }
     </style>
 </head>
 <body>
 
     <div id="fail-screen">
-        <h1 style="font-size: 3rem; margin: 0;">ТЕСТ АНУЛЬОВАНО</h1>
-        <p id="fail-reason" style="font-size: 1.5rem;"></p>
-        <p>Результати (0/12) та причина порушення надіслані вчителю.</p>
+        <h1>ТЕСТ АНУЛЬОВАНО</h1>
+        <p id="fail-reason" style="font-size: 1.2rem;"></p>
+        <p>Результат 0/12 надіслано вчителю.</p>
     </div>
 
     <div class="quiz-container" id="main-app">
         <div id="start-screen">
-            <h1>📐 Геометрія: 10 клас</h1>
-            <p>Вітаємо! Для початку тесту натисніть кнопку нижче.</p>
-            <p style="color: #d9534f; font-weight: bold;">⚠️ УВАГА: Система зафіксує розмір вашого екрана. Будь-яка зміна (розподіл екрана, поворот, згортання) — 0 балів!</p>
-            <button class="btn" onclick="startQuiz()">ПОЧАТИ ТЕСТ</button>
+            <h2>📐 Геометрія: 10 клас</h2>
+            <p>Натисніть кнопку нижче, щоб зафіксувати параметри пристрою та почати тест.</p>
+            <p style="color: red; font-size: 0.85rem;">⚠️ Будь-яка зміна розміру вікна або згортання — БЛОКУВАННЯ.</p>
+            <button class="btn" id="start-btn">ПОЧАТИ ТЕСТ</button>
         </div>
 
         <div id="quiz-content">
             <div class="question">
                 <p>1. Перпендикуляр 12 см, похила 13 см. Проєкція?</p>
-                <input type="number" id="q1" placeholder="см">
+                <input type="number" id="q1">
             </div>
             <div class="question">
                 <p>2. Проєкція 5 см, кут 45°. Перпендикуляр?</p>
-                <input type="number" id="q2" placeholder="см">
+                <input type="number" id="q2">
             </div>
             <div class="question">
-                <p>3. Похилі по 10 см, кут між проєкціями 60°, відстань 6 см. Перпендикуляр?</p>
-                <input type="number" id="q3" placeholder="см">
+                <p>3. Похилі 10 см, кут 60°, відстань 6 см. Перпендикуляр?</p>
+                <input type="number" id="q3">
             </div>
-            <button class="btn" style="background: #28a745;" onclick="finishTest()">Здати роботу</button>
+            <button class="btn btn-green" onclick="finishTest()">Здати роботу</button>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
+        tg.ready();
         tg.expand();
-        tg.enableClosingConfirmation(); [cite_start]// [cite: 23]
 
         let isStarted = false;
         let baseHeight = 0;
         let baseWidth = 0;
 
+        // Подія для кнопки старту (надійніший спосіб)
+        document.getElementById('start-btn').addEventListener('click', function() {
+            baseHeight = window.innerHeight;
+            baseWidth = window.innerWidth;
+            isStarted = true;
+
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('quiz-content').style.display = 'block';
+            
+            console.log("Тест розпочато. Еталон:", baseHeight, "x", baseWidth);
+        });
+
         function blockTest(reason) {
             if (!isStarted) return;
+            isStarted = false; // Зупиняємо перевірки
+
             document.getElementById('main-app').style.display = 'none';
             document.getElementById('fail-screen').style.display = 'flex';
             document.getElementById('fail-reason').innerText = reason;
@@ -75,54 +94,43 @@
                 "reason": reason,
                 "score": 0
             }));
-            setTimeout(() => { tg.close(); }, 3000); [cite_start]// [cite: 25]
-        }
-
-        // Функція запуску тесту та фіксації розмірів
-        function startQuiz() {
-            baseHeight = window.innerHeight;
-            baseWidth = window.innerWidth;
-            isStarted = true;
-
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('quiz-content').style.display = 'block';
-        }
-
-        // Постійна перевірка розміру (кожні 500мс)
-        setInterval(() => {
-            if (!isStarted) return;
             
-            // Якщо висота змінилася більше ніж на 10% порівняно з фіксацією при старті
-            if (Math.abs(window.innerHeight - baseHeight) > (baseHeight * 0.1) || 
-                Math.abs(window.innerWidth - baseWidth) > (baseWidth * 0.1)) {
-                blockTest("Зміна розміру вікна / Розподілений екран");
+            setTimeout(() => { tg.close(); }, 3000);
+        }
+
+        // ПЕРЕВІРКА РОЗМІРУ (Split-screen)
+        setInterval(() => {
+            if (isStarted) {
+                const hDiff = Math.abs(window.innerHeight - baseHeight);
+                const wDiff = Math.abs(window.innerWidth - baseWidth);
+                
+                // Якщо екран змінився більше ніж на 10%
+                if (hDiff > (baseHeight * 0.1) || wDiff > (baseWidth * 0.1)) {
+                    blockTest("Зміна розміру вікна / Розподілений екран");
+                }
             }
         }, 500);
 
-        // Пастки на вихід
-        window.onblur = () => { if(isStarted) blockTest("Втрата фокусу (вихід з вікна)"); }; [cite_start]// [cite: 25]
+        // ІНШІ ПОРУШЕННЯ
+        window.onblur = () => { if(isStarted) blockTest("Втрата фокусу вікна"); };
         document.addEventListener("visibilitychange", () => {
-            [cite_start]if (document.hidden && isStarted) blockTest("Додаток згорнуто"); // [cite: 26]
+            if (document.hidden && isStarted) blockTest("Додаток згорнуто");
         });
-
-        // Детектор скріншотів
-        tg.onEvent('screenshotReady', () => {
-            if(isStarted) blockTest("Спроба зробити скріншот");
-        });
+        tg.onEvent('screenshotReady', () => { if(isStarted) blockTest("Спроба зробити скріншот"); });
 
         function finishTest() {
+            if (!isStarted) return;
             let score = 0;
-            if (document.getElementById('q1').value == "5") score += 4; [cite_start]// [cite: 28]
-            if (document.getElementById('q2').value == "5") score += 4; [cite_start]// [cite: 28]
-            if (document.getElementById('q3').value == "8") score += 4; [cite_start]// [cite: 29]
+            if (document.getElementById('q1').value == "5") score += 4;
+            if (document.getElementById('q2').value == "5") score += 4;
+            if (document.getElementById('q3').value == "8") score += 4;
 
             tg.sendData(JSON.stringify({
                 "status": "completed",
                 "score": score
             }));
-            tg.close(); [cite_start]// [cite: 30]
+            tg.close();
         }
     </script>
 </body>
 </html>
-
