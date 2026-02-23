@@ -2,35 +2,40 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Контрольна робота</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Геометрія: Контрольна робота</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f5; padding: 20px; display: flex; justify-content: center; user-select: none; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; user-select: none; }
         .quiz-container { max-width: 600px; width: 100%; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .question { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #0088cc; }
-        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .submit-btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff4444; color: white; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .submit-btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; }
+        #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff4444; color: white; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 1000; padding: 20px; }
     </style>
 </head>
 <body>
 
     <div id="fail-screen">
-        <h1>ТЕСТ ПРОВАЛЕНО</h1>
-        <p id="fail-reason"></p>
+        <h1 style="font-size: 3rem;">ТЕСТ ПРОВАЛЕНО</h1>
+        <p style="font-size: 1.5rem;" id="fail-reason"></p>
+        <p>Результат 0/12 зафіксовано та надіслано вчителю.</p>
     </div>
 
     <div class="quiz-container" id="main-quiz">
-        <h1>📐 Геометрія: 10 клас</h1>
+        <h2 style="text-align: center;">📐 Контрольна робота</h2>
+        <p style="text-align: center; color: #666;">Тема: Перпендикуляр та похила</p>
+        
         <div class="question">
-            <p>1. Перпендикуляр 12, похила 13. Проєкція?</p>
-            <input type="number" id="q1">
+            <p>1. До площини проведено перпендикуляр 12 см і похилу 13 см. Знайдіть проєкцію.</p>
+            <input type="number" id="q1" placeholder="см">
         </div>
+
         <div class="question">
-            <p>2. Проєкція 5, кут 45°. Перпендикуляр?</p>
-            <input type="number" id="q2">
+            <p>2. Проєкція похилої 5 см, кут між ними 45°. Знайдіть перпендикуляр.</p>
+            <input type="number" id="q2" placeholder="см">
         </div>
+
         <button class="submit-btn" onclick="finishTest()">Здати роботу</button>
     </div>
 
@@ -38,43 +43,39 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        function sendToBot(payload) {
-            try {
-                [cite_start]tg.sendData(JSON.stringify(payload)); [cite: 24, 29]
-                [cite_start]tg.close(); [cite: 25, 30]
-            } catch (e) {
-                console.error("Помилка відправки:", e);
-            }
+        function sendResult(payload) {
+            tg.sendData(JSON.stringify(payload));
+            tg.close();
         }
 
         function blockTest(reason) {
-            [cite_start]document.getElementById('main-quiz').style.display = 'none'; [cite: 23]
-            [cite_start]document.getElementById('fail-screen').style.display = 'flex'; [cite: 24]
-            [cite_start]document.getElementById('fail-reason').innerText = reason; [cite: 24]
-            
-            sendToBot({
+            document.getElementById('main-quiz').style.display = 'none';
+            document.getElementById('fail-screen').style.display = 'flex';
+            document.getElementById('fail-reason').innerText = reason;
+
+            sendResult({
                 "status": "blocked",
                 "reason": reason,
                 "score": 0
-            [cite_start]}); [cite: 24]
+            });
         }
 
-        // ПАСТКИ (АНТИ-ОБМАН)
-        [cite_start]window.onblur = () => blockTest("Перехід в інше вікно"); [cite: 25]
+        // ПАСТКИ НА ПОРУШЕННЯ
+        window.onblur = () => blockTest("Вихід з вікна / Alt+Tab");
         document.addEventListener("visibilitychange", () => {
-            [cite_start]if (document.hidden) blockTest("Додаток згорнуто"); [cite: 26]
+            if (document.hidden) blockTest("Додаток згорнуто");
         });
         tg.onEvent('screenshotReady', () => blockTest("Зроблено скріншот"));
 
         function finishTest() {
             let score = 0;
-            [cite_start]if (document.getElementById('q1').value == "5") score += 6; [cite: 28]
-            [cite_start]if (document.getElementById('q2').value == "5") score += 6; [cite: 28]
+            if (document.getElementById('q1').value == "5") score += 6;
+            if (document.getElementById('q2').value == "5") score += 6;
 
-            sendToBot({
+            sendResult({
                 "status": "completed",
                 "score": score
-            [cite_start]}); [cite: 29]
+            });
         }
     </script>
 </body>
