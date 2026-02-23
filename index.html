@@ -1,8 +1,4 @@
-Для того, щоб усунути можливість обходу тесту через режим розподіленого екрана (split-screen) на Android або зміну розміру вікна на ПК, необхідно додати обробник події resize.
 
-Ось оновлений та повний код для вашого файлу index.html, який включає всі системи захисту: від згортання, перемикання вкладок, скріншотів та розподілу екрана.
-
-HTML
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -97,6 +93,44 @@ HTML
 
         // 4. Заборона контекстного меню (правої кнопки миші)
         document.addEventListener('contextmenu', event => event.preventDefault());
+        <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    // Забороняє закрити тест випадковим рухом вниз
+    tg.enableClosingConfirmation(); 
+
+    const startHeight = window.innerHeight;
+
+    function blockTest(reason) {
+        document.getElementById('main-quiz').style.display = 'none';
+        document.getElementById('fail-screen').style.display = 'flex';
+        document.getElementById('fail-reason').innerText = reason;
+
+        tg.sendData(JSON.stringify({
+            "status": "blocked",
+            "reason": reason
+        }));
+
+        setTimeout(() => { tg.close(); }, 3000);
+    }
+
+    // Перевірка розміру вікна
+    setInterval(() => {
+        // Якщо учень активує split-screen, висота вікна різко впаде
+        if (window.innerHeight < startHeight * 0.8) {
+            blockTest("Розподілений екран або зміна вікна");
+        }
+    }, 500);
+
+    // Система виявлення виходу та згортання [cite: 1, 25, 26]
+    window.onblur = () => blockTest("Перехід на іншу вкладку або вікно");
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) blockTest("Додаток згорнуто");
+    });
+    
+    // Детектор скріншотів
+    tg.onEvent('screenshotReady', () => blockTest("Зроблено скріншот"));
+</script>
 
         function finishTest() {
             let score = 0;
@@ -114,3 +148,4 @@ HTML
     </script>
 </body>
 </html>
+
