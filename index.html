@@ -1,125 +1,163 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Контрольна: Перпендикуляр і похила</title>
+    <title>Контрольна робота: Перпендикуляр і похила</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .quiz-container { max-width: 600px; width: 100%; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .question { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #0088cc; }
-        input[type="number"] { width: 100%; padding: 12px; margin-top: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        
-        /* Кнопка здачі (дизайн з твого коміту) */
-        .submit-btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; transition: 0.3s; margin-top: 10px; font-weight: bold; }
-        .submit-btn:hover { background: #006699; }
-        
-        /* Калькулятор (висота 50px як у коміті) */
-        .calc-wrapper { background: #1a1a1a; padding: 15px; border-radius: 15px; margin-bottom: 25px; color: white; width: 100%; box-sizing: border-box; }
-        .calc-display { width: 100%; height: 50px; background: #333; border-radius: 5px; border: 1px solid #444; margin-bottom: 10px; text-align: right; padding: 5px 15px; font-size: 1.5rem; color: #00ff08; box-sizing: border-box; font-family: monospace; }
-        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .calc-btn { padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; background: #4a4a4a; color: white; }
-        .calc-btn.op { background: #f39c12; }
-        .calc-btn.spec { background: #2980b9; }
-        .calc-btn.clear { background: #c0392b; }
-
-        /* Екран провалу */
-        #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ff4444; color: white; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; text-align: center; padding: 20px; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f2f5; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center;
+            user-select: none; /* Заборона виділення тексту */
+        }
+        .quiz-container { 
+            max-width: 600px; 
+            width: 100%; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+        }
+        h1 { color: #1c1e21; text-align: center; font-size: 24px; }
+        .question { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 12px; 
+            margin-bottom: 20px;
+            border-left: 5px solid #0088cc; 
+        }
+        p { margin: 0 0 10px 0; font-weight: 500; }
+        input[type="number"] { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ddd;
+            border-radius: 8px; 
+            box-sizing: border-box; 
+        }
+        .submit-btn { 
+            width: 100%; 
+            padding: 15px; 
+            background: #0088cc; 
+            color: white;
+            border: none; 
+            border-radius: 12px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer;
+        }
+        /* Екран блокування */
+        #fail-screen { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%;
+            height: 100%; 
+            background: #ff4444; 
+            color: white; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
 
-<div id="fail-screen">
-    <h1 style="font-size: 3rem;">Test failed.</h1>
-    <p id="fail-reason" style="font-size: 1.5rem;"></p>
-    <p>Спроба зафіксована. Вчитель отримав сповіщення.</p>
-</div>
-
-<div class="quiz-container" id="quiz-ui">
-    <h2 style="text-align: center;">📐 Тест: 6 завдань</h2>
-
-    <div class="calc-wrapper">
-        <input type="text" id="calc-display" class="calc-display" placeholder="0" readonly>
-        <div class="calc-grid">
-            <button class="calc-btn clear" onclick="cClear()">C</button>
-            <button class="calc-btn spec" onclick="cSquare()">x²</button>
-            <button class="calc-btn spec" onclick="cSqrt()">√</button>
-            <button class="calc-btn spec" onclick="cSin()">sin°</button>
-            
-            <button class="calc-btn" onclick="cAdd('7')">7</button>
-            <button class="calc-btn" onclick="cAdd('8')">8</button>
-            <button class="calc-btn" onclick="cAdd('9')">9</button>
-            <button class="calc-btn op" onclick="cAdd('/')">/</button>
-            
-            <button class="calc-btn" onclick="cAdd('4')">4</button>
-            <button class="calc-btn" onclick="cAdd('5')">5</button>
-            <button class="calc-btn" onclick="cAdd('6')">6</button>
-            <button class="calc-btn op" onclick="cAdd('*')">*</button>
-            
-            <button class="calc-btn" onclick="cAdd('1')">1</button>
-            <button class="calc-btn" onclick="cAdd('2')">2</button>
-            <button class="calc-btn" onclick="cAdd('3')">3</button>
-            <button class="calc-btn op" onclick="cAdd('-')">-</button>
-            
-            <button class="calc-btn" onclick="cAdd('0')">0</button>
-            <button class="calc-btn" onclick="cAdd('.')">.</button>
-            <button class="calc-btn op" onclick="cSolve()">=</button>
-            <button class="calc-btn op" onclick="cAdd('+')">+</button>
-        </div>
+    <div id="fail-screen">
+        <h1 style="font-size: 3rem; color: white;">ТЕСТ ПРОВАЛЕНО</h1>
+        <p style="font-size: 1.5rem;" id="fail-reason"></p>
+        <p>Спроба зафіксована та надіслана вчителю.</p>
     </div>
 
-    <div class="question"><p>1. Перпендикуляр 12 см, похила 13 см. Знайдіть проєкцію.</p><input type="number" id="q1"></div>
-    <div class="question"><p>2. Похила 20 см, кут 30°. Знайдіть перпендикуляр.</p><input type="number" id="q2"></div>
-    <div class="question"><p>3. Проєкція 8 см, перпендикуляр 15 см. Знайдіть похилу.</p><input type="number" id="q3"></div>
-    <div class="question"><p>4. Похилі 10 і 17 см. Одна проєкція на 9 см більша. Знайдіть перпендикуляр.</p><input type="number" id="q4"></div>
-    <div class="question"><p>5. Перпендикуляр 4 см, кут 45°. Похила? (sqrt(32) ≈ 6).</p><input type="number" id="q5"></div>
-    <div class="question"><p>6. Відстань 6 см, похила 10 см. Знайдіть проєкцію.</p><input type="number" id="q6"></div>
+    <div class="quiz-container" id="main-quiz">
+        <h1>📐 Геометрія: 10 клас</h1>
+        <p style="text-align: center; color: #666;">Тема: Перпендикуляр та похила</p>
+        
+        <div class="question">
+            <p>1. До площини проведено перпендикуляр довжиною 12 см і похилу довжиною 13 см. Знайдіть довжину проєкції.</p>
+            <input type="number" id="q1" placeholder="Введіть число">
+        </div>
 
-    <button class="submit-btn" onclick="finishTest()">Здати роботу</button>
-</div>
+        <div class="question">
+            <p>2. Проєкція похилої дорівнює 5 см, а кут між похилою і проєкцією — 45°. Знайдіть довжину перпендикуляра.</p>
+            <input type="number" id="q2" placeholder="Введіть число">
+        </div>
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+        <div class="question">
+            <p>3. З точки до площини проведено дві похилі по 10 см. Їх проєкції утворюють кут 60°, а відстань між основами — 6 см. Знайдіть довжину перпендикуляра.</p>
+            <input type="number" id="q3" placeholder="Введіть число">
+        </div>
 
-    // ЗАХИСТ
-    function blockTest(reason) {
-        document.getElementById('quiz-ui').style.display = 'none';
-        document.getElementById('fail-screen').style.display = 'flex';
-        document.getElementById('fail-reason').innerText = reason;
-        tg.sendData(JSON.stringify({"status": "blocked", "reason": reason}));
-        setTimeout(() => { tg.close(); }, 3000);
-    }
+        <button class="submit-btn" onclick="finishTest()">Здати роботу</button>
+    </div>
 
-    // Твої інструкції: при переході на іншу вкладку або згортанні
-    window.onblur = () => blockTest("Вихід з вікна");
-    document.addEventListener("visibilitychange", () => { 
-        if (document.hidden) blockTest("Згортання вікна"); 
-    });
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.enableClosingConfirmation(); // Запит підтвердження при спробі закрити хрестиком
 
-    // КАЛЬКУЛЯТОР (без виправлень логіки)
-    const d = document.getElementById('calc-display');
-    function cAdd(v) { d.value += v; }
-    function cClear() { d.value = ''; }
-    function cSolve() { try { d.value = eval(d.value); } catch { d.value = 'Error'; } }
-    function cSqrt() { if(d.value) d.value = Math.sqrt(eval(d.value)).toFixed(2); }
-    function cSquare() { if(d.value) d.value = Math.pow(eval(d.value), 2); }
-    function cSin() { if(d.value) d.value = Math.sin(eval(d.value) * Math.PI / 180).toFixed(4); }
+        // --- ФУНКЦІЯ БЛОКУВАННЯ ---
+        function blockTest(reason) {
+            document.getElementById('main-quiz').style.display = 'none';
+            document.getElementById('fail-screen').style.display = 'flex';
+            document.getElementById('fail-reason').innerText = reason;
 
-    function finishTest() {
-        let score = 0;
-        if (document.getElementById('q1').value == "5") score += 2;
-        if (document.getElementById('q2').value == "10") score += 2;
-        if (document.getElementById('q3').value == "17") score += 2;
-        if (document.getElementById('q4').value == "8") score += 2;
-        if (document.getElementById('q5').value == "6") score += 2;
-        if (document.getElementById('q6').value == "8") score += 2;
+            // Надсилаємо дані боту [cite: 24]
+            tg.sendData(JSON.stringify({
+                "status": "blocked",
+                "reason": reason,
+                "score": 0
+            }));
+            
+            // Закриваємо через 3 секунди [cite: 25]
+            setTimeout(() => { tg.close(); }, 3000);
+        }
 
-        tg.sendData(JSON.stringify({"status": "completed", "score": score}));
-        tg.close();
-    }
-</script>
+        // --- СИСТЕМА ЗАХИСТУ ---
+        
+        // 1. Детектор виходу (onblur) [cite: 25]
+        window.onblur = () => blockTest("Перехід в інше вікно/вкладку");
+
+        // 2. Детектор згортання (visibilitychange) [cite: 26]
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) blockTest("Додаток згорнуто");
+        });
+
+        // 3. Детектор скріншотів (тільки для Telegram App)
+        tg.onEvent('screenshotReady', () => {
+            blockTest("Зроблено скріншот екрана");
+        });
+
+        // 4. Заборона контекстного меню та клавіш копіювання
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = function(e) {
+            if (e.ctrlKey && (e.keyCode === 67 || e.keyCode === 85 || e.keyCode === 83)) {
+                return false; 
+            }
+        };
+
+        // --- ЗАВЕРШЕННЯ ТЕСТУ ---
+        function finishTest() {
+            let score = 0;
+            // Перевірка відповідей [cite: 28, 29]
+            if (document.getElementById('q1').value == "5") score += 4;
+            if (document.getElementById('q2').value == "5") score += 4;
+            if (document.getElementById('q3').value == "8") score += 4;
+
+            tg.sendData(JSON.stringify({
+                "status": "completed",
+                "score": score
+            }));
+            
+            tg.close(); // [cite: 30]
+        }
+    </script>
 </body>
 </html>
-
