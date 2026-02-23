@@ -1,5 +1,5 @@
-2
-<!DOCTYPE html>
+3
+Це чудово, що технічна частина захисту тепер працює стабільно! Останній штрих — додати логіку автоматичної перевірки відповідей учнів.Я оновив функцію завершення тесту. Тепер вона зчитує значення з обох полів, порівнює їх із правильними відповідями ($5$ для першої задачі та $5$ для другої) і нараховує по 6 балів за кожну правильну дію.Повний код index.html з перевіркою результатівHTML<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
@@ -30,19 +30,21 @@
     <div class="quiz-container" id="main-app">
         <div id="start-screen">
             <h2>📐 Геометрія: 10 клас</h2>
-            <p id="status-msg">Перевірка захисту...</p>
+            <p id="status-msg">Ініціалізація захисту...</p>
             <button class="btn" id="start-btn" disabled>ПОЧАТИ ТЕСТ</button>
         </div>
 
         <div id="quiz-content">
             <div class="question">
-                <p>1. Перпендикуляр 12 см, похила 13 см. Проєкція?</p>
-                <input type="number" class="quiz-input" pattern="[0-9]*" inputmode="numeric">
+                <p><b>Задача 1:</b> Перпендикуляр до площини дорівнює 12 см, а похила — 13 см. Знайдіть довжину проєкції похилої.</p>
+                <input type="number" id="ans1" class="quiz-input" pattern="[0-9]*" inputmode="numeric" placeholder="см">
             </div>
+            
             <div class="question">
-                <p>2. Проєкція 5 см, кут 45°. Перпендикуляр?</p>
-                <input type="number" class="quiz-input" pattern="[0-9]*" inputmode="numeric">
+                <p><b>Задача 2:</b> Проєкція похилої на площину дорівнює 5 см, а кут між похилою та проєкцією — 45°. Знайдіть довжину перпендикуляра.</p>
+                <input type="number" id="ans2" class="quiz-input" pattern="[0-9]*" inputmode="numeric" placeholder="см">
             </div>
+
             <button class="btn" id="finish-btn" style="background: #28a745; margin-top: 10px;">ЗДАТИ РОБОТУ</button>
         </div>
     </div>
@@ -58,27 +60,22 @@
         let isInputActive = false; 
 
         function blockTest(reason) {
-            // Якщо учень у процесі введення, ми ніколи не блокуємо за фокус або висоту
             if (!isStarted || isInputActive) return;
             isStarted = false;
-
             const finalReason = reason === "blur" ? "Test failed." : reason;
-
             document.getElementById('main-app').style.display = 'none';
             document.getElementById('fail-screen').style.display = 'flex';
             document.getElementById('fail-reason').innerText = finalReason;
-
-            tg.sendData(JSON.stringify({"status": "blocked", "reason": finalReason}));
+            tg.sendData(JSON.stringify({"status": "blocked", "reason": finalReason, "score": 0}));
             setTimeout(() => { tg.close(); }, 2500);
         }
 
-        // ПЕРЕВІРКА ПЕРЕД СТАРТОМ (Split-screen detector)
+        // Перевірка Split-screen перед стартом
         const entryCheck = setInterval(() => {
             if (isStarted) return;
             const ratio = window.innerHeight / window.innerWidth;
             const btn = document.getElementById('start-btn');
             const msg = document.getElementById('status-msg');
-
             if (ratio < 1.05) {
                 btn.disabled = true;
                 msg.innerHTML = "<span style='color:red'>❌ Вимкніть розділений екран!</span>";
@@ -88,21 +85,11 @@
             }
         }, 500);
 
-        // УНІВЕРСАЛЬНИЙ ДОЗВІЛ ДЛЯ ВСІХ ПОЛІВ ВВЕДЕННЯ
-        document.addEventListener('focusin', (e) => {
-            if (e.target.tagName === 'INPUT') {
-                isInputActive = true;
-            }
-        });
-
+        // Робота з клавіатурою (перемикання між інпутами)
+        document.addEventListener('focusin', (e) => { if (e.target.tagName === 'INPUT') isInputActive = true; });
         document.addEventListener('focusout', (e) => {
             if (e.target.tagName === 'INPUT') {
-                // Велика затримка (1 сек), щоб учень міг спокійно перемкнутися на інший інпут
-                setTimeout(() => {
-                    if (document.activeElement.tagName !== 'INPUT') {
-                        isInputActive = false;
-                    }
-                }, 1000);
+                setTimeout(() => { if (document.activeElement.tagName !== 'INPUT') isInputActive = false; }, 1000);
             }
         });
 
@@ -113,43 +100,45 @@
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('quiz-content').style.display = 'block';
 
-            // МОНІТОРИНГ ГЕОМЕТРІЇ
             setInterval(() => {
                 if (!isStarted) return;
                 const hDiff = Math.abs(window.innerHeight - baseH);
                 const wDiff = Math.abs(window.innerWidth - baseW);
-
-                // Якщо клавіатура закрита — висота має бути стабільною
                 if (!isInputActive && hDiff > 60) blockTest("Розподілений екран (H)");
-                
-                // Ширина не має мінятися НІКОЛИ (навіть при введенні тексту)
-                if (wDiff > 35) {
-                    isInputActive = false; // Знімаємо імунітет, бо це явно split-screen
-                    blockTest("Розподілений екран (Ширина)");
-                }
+                if (wDiff > 35) { isInputActive = false; blockTest("Розподілений екран (W)"); }
             }, 500);
 
-            // Ультра-захист від виходу (Test failed.)
             function checkFocus() {
-                if (isStarted && !document.hasFocus() && !isInputActive) {
-                    blockTest("blur");
-                }
+                if (isStarted && !document.hasFocus() && !isInputActive) blockTest("blur");
                 if (isStarted) requestAnimationFrame(checkFocus);
             }
             requestAnimationFrame(checkFocus);
         };
 
         document.addEventListener("visibilitychange", () => {
-            if (document.hidden && isStarted) {
-                isInputActive = false; 
-                blockTest("Додаток згорнуто");
-            }
+            if (document.hidden && isStarted) { isInputActive = false; blockTest("Додаток згорнуто"); }
         });
 
         tg.onEvent('screenshotReady', () => { blockTest("Скріншот"); });
 
+        // ПЕРЕВІРКА РЕЗУЛЬТАТІВ
         document.getElementById('finish-btn').onclick = () => {
-            tg.sendData(JSON.stringify({"status": "completed", "score": 12}));
+            let score = 0;
+            const a1 = document.getElementById('ans1').value.trim();
+            const a2 = document.getElementById('ans2').value.trim();
+
+            // Математична логіка:
+            // 1. sqrt(13^2 - 12^2) = sqrt(169 - 144) = sqrt(25) = 5
+            if (a1 === "5") score += 6;
+            
+            // 2. В прямокутному тр. з кутом 45 катети рівні. Якщо проєкція 5, то перпендикуляр 5.
+            if (a2 === "5") score += 6;
+
+            tg.sendData(JSON.stringify({
+                "status": "completed",
+                "score": score,
+                "answers": {"q1": a1, "q2": a2}
+            }));
             tg.close();
         };
     </script>
