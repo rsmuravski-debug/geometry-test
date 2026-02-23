@@ -1,56 +1,46 @@
-1. Файл index.html (Для GitHub Pages)
-HTML
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Контрольна робота: Геометрія</title>
+    <title>Контрольна робота</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Блокування виділення тексту та синього підсвічування при натисканні */
         * { user-select: none !important; -webkit-touch-callout: none !important; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; overflow-x: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; overflow: hidden; }
         .quiz-container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         #quiz-content { display: none; }
-        #start-screen { text-align: center; }
         .question { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #0088cc; }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; }
+        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
         input:focus { border-color: #0088cc; }
-        .btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.3s; }
-        .btn:active { transform: scale(0.98); }
-        #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #ff4444; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 10000; padding: 20px; }
+        .btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #ff4444; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; padding: 20px; text-align: center; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
     <div id="fail-screen">
-        <h1 style="font-size: 3rem; margin: 0;">🛑 ТЕСТ ПРОВАЛЕНО</h1>
-        <p id="fail-reason" style="font-size: 1.5rem; color: white; margin: 20px 0;"></p>
-        <p style="color: #666;">Повідомлення надіслано на ваш ID: 5250364592</p>
+        <h1 style="font-size: 2.5rem;">🚨 ТЕСТ ЗАБЛОКОВАНО</h1>
+        <p id="fail-reason" style="font-size: 1.2rem; color: white;"></p>
+        <p>Ваш ID: 5250364592</p>
     </div>
 
     <div class="quiz-container" id="main-app">
         <div id="start-screen">
-            <h2 style="color: #1c1e21;">📐 Геометрія: 10 клас</h2>
-            <p>Тема: Перпендикуляр та похила</p>
-            <div style="background: #fff4f4; padding: 15px; border-radius: 10px; border: 1px solid #ffcccc; margin: 20px 0; text-align: left; font-size: 0.9rem;">
-                <b>ПРАВИЛА:</b><br>
-                • Не перемикайте вкладки.<br>
-                • Не розділяйте екран (Split-screen).<br>
-                • Будь-яка дія — 0 балів.
-            </div>
-            <button class="btn" id="start-btn">ПОЧАТИ ТЕСТ</button>
+            <h2>📐 Геометрія: 10 клас</h2>
+            <p id="status-msg">Перевірка середовища...</p>
+            <button class="btn" id="start-btn" disabled>ПОЧАТИ ТЕСТ</button>
         </div>
 
         <div id="quiz-content">
             <div class="question">
-                <p>1. Перпендикуляр 12 см, похила 13 см. Знайти довжину проєкції.</p>
-                <input type="number" id="q1" autocomplete="off" placeholder="Введіть число...">
+                <p>1. Перпендикуляр 12 см, похила 13 см. Проєкція?</p>
+                <input type="number" id="q1" placeholder="Введіть відповідь">
             </div>
             <div class="question">
-                <p>2. Проєкція похилої 5 см, кут між ними 45°. Знайти перпендикуляр.</p>
-                <input type="number" id="q2" autocomplete="off" placeholder="Введіть число...">
+                <p>2. Проєкція 5 см, кут 45°. Перпендикуляр?</p>
+                <input type="number" id="q2" placeholder="Введіть відповідь">
             </div>
             <button class="btn" id="finish-btn" style="background: #28a745;">ЗДАТИ РОБОТУ</button>
         </div>
@@ -65,90 +55,81 @@ HTML
         let baseW = 0;
         let isKeyboardOpen = false;
 
+        // 1. Функція перевірки наявності розділеного екрана
+        function isSplitScreen() {
+            const ratio = window.innerHeight / window.innerWidth;
+            // Якщо екран занадто квадратний (ratio < 1.3), це майже напевно split-screen
+            return ratio < 1.3; 
+        }
+
+        // 2. Постійна перевірка стану кнопки до початку тесту
+        const validateEntry = setInterval(() => {
+            if (isStarted) {
+                clearInterval(validateEntry);
+                return;
+            }
+            const btn = document.getElementById('start-btn');
+            const msg = document.getElementById('status-msg');
+
+            if (isSplitScreen()) {
+                btn.disabled = True;
+                msg.innerText = "❌ Вимкніть розділений екран для початку!";
+                msg.style.color = "red";
+            } else {
+                btn.disabled = False;
+                msg.innerText = "✅ Все готово. Можна починати.";
+                msg.style.color = "green";
+            }
+        }, 500);
+
         function blockTest(reason) {
             if (!isStarted) return;
             isStarted = false;
             document.getElementById('main-app').style.display = 'none';
             document.getElementById('fail-screen').style.display = 'flex';
             document.getElementById('fail-reason').innerText = reason;
-
-            tg.sendData(JSON.stringify({
-                "status": "blocked",
-                "reason": reason,
-                "score": 0
-            }));
-            setTimeout(() => { tg.close(); }, 3000);
+            tg.sendData(JSON.stringify({"status": "blocked", "reason": reason}));
+            setTimeout(() => tg.close(), 3000);
         }
 
-        // Детектор клавіатури
+        // Введення даних: відстежуємо клавіатуру
         document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('focus', () => { isKeyboardOpen = true; });
-            input.addEventListener('blur', () => { 
-                // Даємо час на анімацію закриття клавіатури
-                setTimeout(() => { isKeyboardOpen = false; }, 400); 
-            });
+            input.addEventListener('focus', () => isKeyboardOpen = true);
+            input.addEventListener('blur', () => setTimeout(() => isKeyboardOpen = false, 500));
         });
 
         function startQuiz() {
             tg.expand();
-            // Даємо час додатку розгорнутися перед заміром
             setTimeout(() => {
                 baseH = window.innerHeight;
                 baseW = window.innerWidth;
                 isStarted = true;
-                
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('quiz-content').style.display = 'block';
                 
-                // МОНІТОРИНГ РОЗМІРУ (БЛОКУВАННЯ РОЗПОДІЛУ ЕКРАНА)
+                // Моніторинг під час тесту
                 setInterval(() => {
                     if (!isStarted) return;
-                    
-                    let currentH = window.innerHeight;
-                    let currentW = window.innerWidth;
-                    let hDiff = Math.abs(currentH - baseH);
-                    let wDiff = Math.abs(currentW - baseW);
+                    let hDiff = Math.abs(window.innerHeight - baseH);
+                    let wDiff = Math.abs(window.innerWidth - baseW);
 
-                    // Якщо зміна ширини (клавіатура її не міняє, а split-screen - так)
-                    if (wDiff > 35) {
-                        blockTest("Розподілений екран (зміна ширини)");
-                    }
-                    
-                    // Якщо зміна висоти без клавіатури
-                    if (!isKeyboardOpen && hDiff > 60) {
-                        blockTest("Розподілений екран (зміна висоти)");
-                    }
-
-                    // Перевірка пропорцій (ratio)
-                    if (!isKeyboardOpen && (currentH / currentW < 1.1)) {
-                        blockTest("Недопустимий розмір вікна");
-                    }
+                    // Якщо клавіатура закрита — перевіряємо висоту ЖОРСТКО
+                    if (!isKeyboardOpen && hDiff > 30) blockTest("Зміна розміру вікна");
+                    // Ширину перевіряємо ЗАВЖДИ (навіть з клавіатурою вона не має мінятися)
+                    if (wDiff > 20) blockTest("Розподілений екран (зміна ширини)");
                 }, 400);
             }, 500);
         }
 
         document.getElementById('start-btn').addEventListener('click', startQuiz);
-
-        // ВАШЕ ПРАВИЛО: "Test failed." при виході з вкладки
         window.onblur = () => { if(isStarted) blockTest("Test failed."); };
-        
-        document.addEventListener("visibilitychange", () => {
-            if (document.hidden && isStarted) blockTest("Додаток згорнуто");
-        });
-
-        tg.onEvent('screenshotReady', () => {
-            if(isStarted) blockTest("Скріншот заблоковано");
-        });
+        tg.onEvent('screenshotReady', () => { if(isStarted) blockTest("Скріншот заблоковано"); });
 
         document.getElementById('finish-btn').addEventListener('click', () => {
             let score = 0;
             if (document.getElementById('q1').value == "5") score += 6;
             if (document.getElementById('q2').value == "5") score += 6;
-            
-            tg.sendData(JSON.stringify({
-                "status": "completed", 
-                "score": score
-            }));
+            tg.sendData(JSON.stringify({"status": "completed", "score": score}));
             tg.close();
         });
     </script>
