@@ -1,4 +1,4 @@
-1
+2
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -43,7 +43,7 @@
                 <p>2. Проєкція 5 см, кут 45°. Перпендикуляр?</p>
                 <input type="number" class="quiz-input" pattern="[0-9]*" inputmode="numeric">
             </div>
-            <button class="btn" id="finish-btn" style="background: #28a745;">ЗДАТИ РОБОТУ</button>
+            <button class="btn" id="finish-btn" style="background: #28a745; margin-top: 10px;">ЗДАТИ РОБОТУ</button>
         </div>
     </div>
 
@@ -55,9 +55,10 @@
         let isStarted = false;
         let baseH = 0;
         let baseW = 0;
-        let isInputActive = false; // Прапорець для клавіатури
+        let isInputActive = false; 
 
         function blockTest(reason) {
+            // Якщо учень у процесі введення, ми ніколи не блокуємо за фокус або висоту
             if (!isStarted || isInputActive) return;
             isStarted = false;
 
@@ -71,14 +72,14 @@
             setTimeout(() => { tg.close(); }, 2500);
         }
 
-        // ПЕРЕВІРКА ПЕРЕД СТАРТОМ
+        // ПЕРЕВІРКА ПЕРЕД СТАРТОМ (Split-screen detector)
         const entryCheck = setInterval(() => {
             if (isStarted) return;
             const ratio = window.innerHeight / window.innerWidth;
             const btn = document.getElementById('start-btn');
             const msg = document.getElementById('status-msg');
 
-            if (ratio < 1.1) {
+            if (ratio < 1.05) {
                 btn.disabled = true;
                 msg.innerHTML = "<span style='color:red'>❌ Вимкніть розділений екран!</span>";
             } else {
@@ -87,15 +88,22 @@
             }
         }, 500);
 
-        // ДОЗВІЛ ДЛЯ КЛАВІАТУРИ У КОЖНОМУ ВІКНІ
-        document.querySelectorAll('.quiz-input').forEach(input => {
-            input.addEventListener('focus', () => { 
-                isInputActive = true; 
-            });
-            input.addEventListener('blur', () => { 
-                // Затримка, щоб вікно встигло повернутися до норми
-                setTimeout(() => { isInputActive = false; }, 600); 
-            });
+        // УНІВЕРСАЛЬНИЙ ДОЗВІЛ ДЛЯ ВСІХ ПОЛІВ ВВЕДЕННЯ
+        document.addEventListener('focusin', (e) => {
+            if (e.target.tagName === 'INPUT') {
+                isInputActive = true;
+            }
+        });
+
+        document.addEventListener('focusout', (e) => {
+            if (e.target.tagName === 'INPUT') {
+                // Велика затримка (1 сек), щоб учень міг спокійно перемкнутися на інший інпут
+                setTimeout(() => {
+                    if (document.activeElement.tagName !== 'INPUT') {
+                        isInputActive = false;
+                    }
+                }, 1000);
+            }
         });
 
         document.getElementById('start-btn').onclick = () => {
@@ -105,18 +113,19 @@
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('quiz-content').style.display = 'block';
 
-            // Моніторинг розміру
+            // МОНІТОРИНГ ГЕОМЕТРІЇ
             setInterval(() => {
                 if (!isStarted) return;
                 const hDiff = Math.abs(window.innerHeight - baseH);
                 const wDiff = Math.abs(window.innerWidth - baseW);
 
-                // Блокуємо зміну висоти тільки якщо НЕ активне поле вводу
+                // Якщо клавіатура закрита — висота має бути стабільною
                 if (!isInputActive && hDiff > 60) blockTest("Розподілений екран (H)");
-                // Ширина не має мінятися за жодних умов
+                
+                // Ширина не має мінятися НІКОЛИ (навіть при введенні тексту)
                 if (wDiff > 35) {
-                    isInputActive = false; // Примусове блокування навіть при клавіатурі
-                    blockTest("Розподілений екран (W)");
+                    isInputActive = false; // Знімаємо імунітет, бо це явно split-screen
+                    blockTest("Розподілений екран (Ширина)");
                 }
             }, 500);
 
@@ -131,7 +140,10 @@
         };
 
         document.addEventListener("visibilitychange", () => {
-            if (document.hidden && isStarted) blockTest("Додаток згорнуто");
+            if (document.hidden && isStarted) {
+                isInputActive = false; 
+                blockTest("Додаток згорнуто");
+            }
         });
 
         tg.onEvent('screenshotReady', () => { blockTest("Скріншот"); });
@@ -143,5 +155,3 @@
     </script>
 </body>
 </html>
-
-
