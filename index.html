@@ -7,14 +7,14 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { user-select: none !important; -webkit-touch-callout: none !important; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
         .quiz-container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         #quiz-content { display: none; }
         .question { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #0088cc; }
-        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
+        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
         input:focus { border-color: #0088cc; }
         .btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn:disabled { background: #ccc !important; cursor: not-allowed; opacity: 0.6; }
         #fail-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #ff4444; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; padding: 20px; text-align: center; }
     </style>
 </head>
@@ -30,17 +30,17 @@
         <div id="start-screen">
             <h2>📐 Геометрія: 10 клас</h2>
             <p id="status-msg">Перевірка середовища...</p>
-            <button class="btn" id="start-btn" disabled>ПОЧАТИ ТЕСТ</button>
+            <button class="btn" id="start-btn">ПОЧАТИ ТЕСТ</button>
         </div>
 
         <div id="quiz-content">
             <div class="question">
                 <p>1. Перпендикуляр 12 см, похила 13 см. Проєкція?</p>
-                <input type="number" id="q1" placeholder="Введіть відповідь">
+                <input type="number" id="q1" placeholder="Введіть число">
             </div>
             <div class="question">
                 <p>2. Проєкція 5 см, кут 45°. Перпендикуляр?</p>
-                <input type="number" id="q2" placeholder="Введіть відповідь">
+                <input type="number" id="q2" placeholder="Введіть число">
             </div>
             <button class="btn" id="finish-btn" style="background: #28a745;">ЗДАТИ РОБОТУ</button>
         </div>
@@ -49,35 +49,31 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
+        tg.expand();
 
         let isStarted = false;
         let baseH = 0;
         let baseW = 0;
         let isKeyboardOpen = false;
 
-        // 1. Функція перевірки наявності розділеного екрана
-        function isSplitScreen() {
-            const ratio = window.innerHeight / window.innerWidth;
-            // Якщо екран занадто квадратний (ratio < 1.3), це майже напевно split-screen
-            return ratio < 1.3; 
-        }
-
-        // 2. Постійна перевірка стану кнопки до початку тесту
-        const validateEntry = setInterval(() => {
+        // Постійна перевірка стану екрана до старту
+        const checkInitialState = setInterval(() => {
             if (isStarted) {
-                clearInterval(validateEntry);
+                clearInterval(checkInitialState);
                 return;
             }
             const btn = document.getElementById('start-btn');
             const msg = document.getElementById('status-msg');
+            const ratio = window.innerHeight / window.innerWidth;
 
-            if (isSplitScreen()) {
-                btn.disabled = True;
-                msg.innerText = "❌ Вимкніть розділений екран для початку!";
+            // Більш лояльний поріг для запуску (ratio > 1.0 — вертикальний режим)
+            if (ratio < 1.05) {
+                btn.disabled = true;
+                msg.innerText = "❌ Вимкніть розділений екран або поверніть телефон вертикально!";
                 msg.style.color = "red";
             } else {
-                btn.disabled = False;
-                msg.innerText = "✅ Все готово. Можна починати.";
+                btn.disabled = false;
+                msg.innerText = "✅ Система готова до запуску.";
                 msg.style.color = "green";
             }
         }, 500);
@@ -92,37 +88,45 @@
             setTimeout(() => tg.close(), 3000);
         }
 
-        // Введення даних: відстежуємо клавіатуру
+        // Відстеження клавіатури для внесення даних
         document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('focus', () => isKeyboardOpen = true);
-            input.addEventListener('blur', () => setTimeout(() => isKeyboardOpen = false, 500));
+            input.addEventListener('focus', () => { isKeyboardOpen = true; });
+            input.addEventListener('blur', () => { setTimeout(() => { isKeyboardOpen = false; }, 500); });
         });
 
         function startQuiz() {
-            tg.expand();
-            setTimeout(() => {
-                baseH = window.innerHeight;
-                baseW = window.innerWidth;
-                isStarted = true;
-                document.getElementById('start-screen').style.display = 'none';
-                document.getElementById('quiz-content').style.display = 'block';
-                
-                // Моніторинг під час тесту
-                setInterval(() => {
-                    if (!isStarted) return;
-                    let hDiff = Math.abs(window.innerHeight - baseH);
-                    let wDiff = Math.abs(window.innerWidth - baseW);
+            // Заміряємо еталонні розміри
+            baseH = window.innerHeight;
+            baseW = window.innerWidth;
+            isStarted = true;
 
-                    // Якщо клавіатура закрита — перевіряємо висоту ЖОРСТКО
-                    if (!isKeyboardOpen && hDiff > 30) blockTest("Зміна розміру вікна");
-                    // Ширину перевіряємо ЗАВЖДИ (навіть з клавіатурою вона не має мінятися)
-                    if (wDiff > 20) blockTest("Розподілений екран (зміна ширини)");
-                }, 400);
-            }, 500);
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('quiz-content').style.display = 'block';
+            
+            // Жорсткий моніторинг після старту
+            setInterval(() => {
+                if (!isStarted) return;
+                let currentH = window.innerHeight;
+                let currentW = window.innerWidth;
+                let hDiff = Math.abs(currentH - baseH);
+                let wDiff = Math.abs(currentW - baseW);
+
+                // Якщо клавіатура закрита — будь-яка зміна висоти заборонена
+                if (!isKeyboardOpen && hDiff > 40) {
+                    blockTest("Зміна розміру вікна (Split-screen)");
+                }
+                // Ширина не повинна мінятися навіть з клавіатурою
+                if (wDiff > 25) {
+                    blockTest("Зміна ширини вікна (Split-screen)");
+                }
+            }, 400);
         }
 
         document.getElementById('start-btn').addEventListener('click', startQuiz);
+
+        // Спеціальне правило: перемикання вкладки
         window.onblur = () => { if(isStarted) blockTest("Test failed."); };
+        
         tg.onEvent('screenshotReady', () => { if(isStarted) blockTest("Скріншот заблоковано"); });
 
         document.getElementById('finish-btn').addEventListener('click', () => {
@@ -135,4 +139,3 @@
     </script>
 </body>
 </html>
-
